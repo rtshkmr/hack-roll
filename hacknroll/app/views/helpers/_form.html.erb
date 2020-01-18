@@ -1,0 +1,22 @@
+<%= form_with(model: helper, local: true) do |form| %>
+  <% if helper.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(helper.errors.count, "error") %> prohibited this helper from being saved:</h2>
+
+      <ul>
+        <% helper.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :helper_score %>
+    <%= form.number_field :helper_score %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>
