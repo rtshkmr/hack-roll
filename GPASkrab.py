@@ -69,12 +69,13 @@ class GPASkrab(BotHandlerMixin, Bottle):
                 "module_code" : mod,
                 "question_body": ques,
                 "answer_body": "",
-                "answered": false,
+                "answered": False,
                 "asker_id":data['message']['chat']['id'],
                 "created_at":"",
                 "updated_at":""
             }
             print(json_data)
+            url_ = 'https://buttend.herokuapp.com/api/questions.json'
             requests.post(url= url_,json = json_data)    
             print('post succeed')
             answer = "Cool we have sent it to the GPA Warriors they will take care of it. In the mean time buck up"
