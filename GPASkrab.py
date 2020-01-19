@@ -42,27 +42,28 @@ class GPASkrab(BotHandlerMixin, Bottle):
     def __init__(self, *args, **kwargs):
         super(GPASkrab, self).__init__()
         self.route('/', callback=self.post_handler, method="POST")
-  
+    
+        
+
+
     def prepare_data_for_answer(self, data):
         message = self.get_message(data)
         chat_id = self.get_chat_id(data)
-        answer = 0
+        answer = ""
         if(message== "/start" or message ==  "hi"):
             print ("constraint: /start but this is "+ message)
             answer = "Hi skrub, what do you wish to do \n/Ask to ask a question or /Answer to answer a question"
         elif (message=="/Ask" or message ==  "/ask"):
-            answer = "Hi skrub, what mod are you asking help for? (input in the following example: #stu CS2030)"
+            answer = "Hi skrub, what mod and question do you have? (input in the following example: #stu CS2030; Me need help)"
         elif (message=="/Answer" or message ==  "/answer"):
             answer = "Hi warrior, what mod can you save ass in? (example: #tea CS2030)"
-        elif (message[:4] == "#stu"):
-            mod = message[5:]
-            answer = "cool now send the question for "+ mod + " like this #Que i need help"
         elif (message[:4] == "#Ans"):
             Ans = message
             answer = "Thank you warrior you are a champion"
-        elif (message[:4] == "#Que" or message[:4] == "#que" ):
-            #print(mod)
-            ques = message[5:]
+        elif (message[:4] == "#stu"):
+            ind = message.find(";")
+            mod = message[5:ind]
+            ques = message[ind+1:]
             print(ques)
             json_data = {
                 "module_code" : mod,
@@ -77,18 +78,15 @@ class GPASkrab(BotHandlerMixin, Bottle):
             requests.post(url= url_,json = json_data)    
             print('post succeed')
             answer = "Cool we have sent it to the GPA Warriors they will take care of it. In the mean time buck up"
-      # if (message[:4]=="#tea"):
-            #     answer = "Please help this poor soul, Warrior. Here you go! If you choose to help use #Ans at the front"
-            # else:
-            #     answer = "Just post your dumb question here you dubfk with the tag #Que at the front"
-        elif(len(message[4:])<8 and (message[:4] == '#tea' or message[:4] == '#Tea')):
+
+        elif(len(message[5:])<8 and (message[:4] == '#tea' or message[:4] == '#Tea')):
             mod = message[5:]
             print(mod)
             json_data = requests.get('https://buttend.herokuapp.com/api/questions.json').json()
             for entry in json_data:
                 print(entry['module_code']+ ' and '+ mod)
                 if entry['module_code'] == mod:
-                    DraftMessage = 'Questionid: ' + str(entry['asker_id']) + '\nQuestion:' + entry['question_body']+'\n reply to this message if you want to answer it'
+                    DraftMessage = 'Questionid: ' + str(entry['asker_id']) + '\nModuleid: '+str(entry['module_code'])+'\nQuestion:' + entry['question_body']+'\n reply to this message if you want to answer it'
                     print(DraftMessage)
                     chat_id = self.get_chat_id(data)
                     json_data = {
@@ -98,7 +96,6 @@ class GPASkrab(BotHandlerMixin, Bottle):
                     print(json_data)
                     self.send_message(json_data)
             
-                    
         else:
             answer = 'oops'
 
@@ -111,9 +108,33 @@ class GPASkrab(BotHandlerMixin, Bottle):
     def post_handler(self):
         data = bottle_request.json
         print(data)
-        answer_data = self.prepare_data_for_answer(data)
-        self.send_message(answer_data)
-        return response
+        try:
+            if data['message']['reply_to_message']['from']['is_bot']:
+                chatidend = data['message']['reply_to_message']['text'].find('insert')
+                senderChatID = data['message']['reply_to_message']['text'][12:chatidend]
+                print(senderChatID)
+                messagestart = data['message']['reply_to_message']['text'].find('Question:')
+                print(messagestart)
+                messageend = data['message']['reply_to_message']['text'].find('reply to this message')
+                print(messageend)
+                messageActualQuestion =  data['message']['reply_to_message']['text'][messagestart:messageend]
+                print(messageActualQuestion)
+                messageReply ='Your Reply: '+ data['message']['text']
+                print(messageReply)
+                answer = messageActualQuestion + '\n' + messageReply
+                json_data = {
+                    "chat_id": senderChatID,
+                        "text": answer,
+                }             
+                self.send_message(json_data)
+        except:
+            print('didnt reply')
+            try:
+                answer_data = self.prepare_data_for_answer(data)
+                self.send_message(answer_data)
+                return response
+            except KeyError:
+                return ""
 
 if __name__ == '__main__':  
     foo()
