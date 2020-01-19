@@ -106,6 +106,11 @@ class GPASkrab(BotHandlerMixin, Bottle):
         } 
         return json_data
 
+    def generate_delete_json(self):
+        self["answered"] = True
+        # return self
+
+
     def post_handler(self):
         data = bottle_request.json
         print(data)
@@ -113,21 +118,36 @@ class GPASkrab(BotHandlerMixin, Bottle):
             if data['message']['reply_to_message']['from']['is_bot']:
                 chatidend = data['message']['reply_to_message']['text'].find('insert')
                 senderChatID = data['message']['reply_to_message']['text'][12:chatidend]
-                print(senderChatID)
                 messagestart = data['message']['reply_to_message']['text'].find('Question:')
-                print(messagestart)
                 messageend = data['message']['reply_to_message']['text'].find('reply to this message')
-                print(messageend)
                 messageActualQuestion =  data['message']['reply_to_message']['text'][messagestart:messageend]
-                print(messageActualQuestion)
                 messageReply ='Your Reply: '+ data['message']['text']
-                print(messageReply)
                 answer = messageActualQuestion + '\n' + messageReply
                 json_data = {
                     "chat_id": senderChatID,
                         "text": answer,
-                }             
+                }
+                
+                wew = requests.get('https://buttend.herokuapp.com/api/questions.json').json()  
+                qid =1
+                for entry in wew:
+                    print(str(entry['asker_id']).strip())
+                    print(str(senderChatID).strip()[:8])
+                    if str(entry['asker_id']).strip() == str(senderChatID).strip()[:8]:
+                        qid = entry['id']
+                    else:
+                        print('qid: error') 
+                qid = str(qid)
+                print('before qid: '+qid)         
+                requests.delete('https://buttend.herokuapp.com/api/questions/'+qid+'.json')
+                print('qid: '+qid)   
+                print('delete works')
                 self.send_message(json_data)
+
+                
+
+
+
         except:
             print('didnt reply')
             try:
@@ -140,4 +160,4 @@ class GPASkrab(BotHandlerMixin, Bottle):
 if __name__ == '__main__':  
     foo()
     app = GPASkrab()
-    app.run(host='localhost', port=8080, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
