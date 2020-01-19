@@ -1,6 +1,7 @@
 import requests
 from bottle import Bottle, response, request as bottle_request
 import json
+import os
 
 class BotHandlerMixin:  
     BOT_URL = None
